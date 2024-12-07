@@ -4,22 +4,19 @@ const sdk = require("microsoft-cognitiveservices-speech-sdk");
 const fs = require("fs");
 
 const app = express();
-app.use(express.json()); // Middleware to parse JSON request bodies
+app.use(express.json()); 
 
-// Azure Speech Configuration
 const speechConfig = sdk.SpeechConfig.fromSubscription(process.env.SPEECH_KEY, process.env.SPEECH_REGION);
-speechConfig.speechSynthesisVoiceName = "en-US-JennyNeural"; // Use desired voice
+speechConfig.speechSynthesisVoiceName = "en-US-JennyNeural"; 
 speechConfig.setProperty(
     sdk.PropertyId.SpeechServiceConnection_SynthOutputFormat,
-    sdk.SpeechSynthesisOutputFormat.Audio16Khz32KBitRateMonoMp3 // Set MP3 output format
+    sdk.SpeechSynthesisOutputFormat.Audio16Khz32KBitRateMonoMp3 
 );
 
-// Root Route
 app.get("/", (req, res) => {
     res.send("Welcome to the Text-to-Speech API. Use POST /synthesize to convert text to speech.");
 });
 
-// API Endpoint for Text-to-Speech
 app.post("/synthesize", (req, res) => {
     console.log("Request received:", req.body);
     const { text } = req.body;
@@ -31,14 +28,12 @@ app.post("/synthesize", (req, res) => {
 
     console.log("Received text for synthesis:", text);
 
-    // Generate a unique filename for each request
     const fileName = `output_${Date.now()}.mp3`;
     const audioConfig = sdk.AudioConfig.fromAudioFileOutput(fileName);
     const synthesizer = new sdk.SpeechSynthesizer(speechConfig, audioConfig);
 
     console.log("Starting speech synthesis...");
 
-    // Set a timeout to prevent indefinite hangs
     const timeout = setTimeout(() => {
         console.error("Speech synthesis timed out.");
         synthesizer.close();
@@ -46,12 +41,12 @@ app.post("/synthesize", (req, res) => {
     }, 120000); // 120 seconds timeout
 
     synthesizer.speakTextAsync(text, (result) => {
-        clearTimeout(timeout); // Clear timeout on success
+        clearTimeout(timeout); 
         synthesizer.close();
         if (result.reason === sdk.ResultReason.SynthesizingAudioCompleted) {
             console.log(`Synthesis completed. File saved as ${fileName}`);
             res.download(fileName, () => {
-                fs.unlinkSync(fileName); // Cleanup: Delete the file after download
+                fs.unlinkSync(fileName); 
             });
         } else if (result.reason === sdk.ResultReason.Canceled) {
             const cancellationDetails = sdk.SpeechSynthesisCancellationDetails.fromResult(result);
@@ -62,7 +57,7 @@ app.post("/synthesize", (req, res) => {
             res.status(500).json({ error: "Speech synthesis failed." });
         }
     }, (err) => {
-        clearTimeout(timeout); // Clear timeout on error
+        clearTimeout(timeout); 
         console.error("Error during synthesis:", err);
         synthesizer.close();
         res.status(500).json({ error: "Internal Server Error" });
@@ -71,5 +66,3 @@ app.post("/synthesize", (req, res) => {
 
 // Start the server
 app.listen(3000, () => console.log("Server running on http://localhost:3000"));
-console.log("Speech Key:", process.env.SPEECH_KEY);
-console.log("Speech Region:", process.env.SPEECH_REGION);

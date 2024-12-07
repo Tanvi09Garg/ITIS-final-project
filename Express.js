@@ -4,22 +4,19 @@ const sdk = require("microsoft-cognitiveservices-speech-sdk");
 const fs = require("fs");
 
 const app = express();
-app.use(express.json()); // Middleware to parse JSON request bodies
+app.use(express.json()); 
 
-// Azure Speech Configuration
 const speechConfig = sdk.SpeechConfig.fromSubscription(process.env.SPEECH_KEY, process.env.SPEECH_REGION);
-speechConfig.speechSynthesisVoiceName = "en-US-JennyNeural"; // Use desired voice
+speechConfig.speechSynthesisVoiceName = "en-US-JennyNeural"; 
 speechConfig.setProperty(
     sdk.PropertyId.SpeechServiceConnection_SynthOutputFormat,
-    sdk.SpeechSynthesisOutputFormat.Audio16Khz32KBitRateMonoMp3 // Set MP3 output format
+    sdk.SpeechSynthesisOutputFormat.Audio16Khz32KBitRateMonoMp3 
 );
 
-// Root Route
 app.get("/", (req, res) => {
     res.send("Welcome to the Text-to-Speech API. Use POST /synthesize to convert text to speech.");
 });
 
-// API Endpoint for Text-to-Speech
 app.post("/synthesize", (req, res) => {
     console.log("Request received:", req.body);
 
@@ -43,7 +40,6 @@ app.post("/synthesize", (req, res) => {
 
     console.log("Starting speech synthesis...");
 
-    // Set a timeout for the synthesis
     const timeout = setTimeout(() => {
         console.error("Speech synthesis timed out.");
         synthesizer.close();
@@ -51,12 +47,12 @@ app.post("/synthesize", (req, res) => {
     }, 30000); // 30 seconds
 
     synthesizer.speakTextAsync(text, (result) => {
-        clearTimeout(timeout); // Clear the timeout on success
+        clearTimeout(timeout); 
         synthesizer.close();
         if (result.reason === sdk.ResultReason.SynthesizingAudioCompleted) {
             console.log(`Synthesis completed. File saved as ${fileName}`);
             res.download(fileName, () => {
-                fs.unlinkSync(fileName); // Cleanup file after download
+                fs.unlinkSync(fileName); 
             });
         } else if (result.reason === sdk.ResultReason.Canceled) {
             const cancellationDetails = sdk.SpeechSynthesisCancellationDetails.fromResult(result);
@@ -67,7 +63,7 @@ app.post("/synthesize", (req, res) => {
             res.status(500).json({ error: "Speech synthesis failed." });
         }
     }, (err) => {
-        clearTimeout(timeout); // Clear the timeout on error
+        clearTimeout(timeout); 
         console.error("Error during synthesis:", err);
         synthesizer.close();
         res.status(500).json({ error: "Internal Server Error" });
