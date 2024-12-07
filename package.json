@@ -1,7 +1,13 @@
 {
+<<<<<<< HEAD
   "name": "itis-final-project",
   "version": "1.0.0",
   "main": "index.js",
+=======
+  "name": "tanvi_garg_text-to-speech",
+  "version": "1.0.0",
+  "main": "Node.js",
+>>>>>>> 766a430 (Initial commit for Azure Text-to-Speech project)
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
